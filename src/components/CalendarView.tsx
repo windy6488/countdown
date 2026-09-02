@@ -1,0 +1,143 @@
+import { useMemo, useState } from 'react';
+import type { EventItem } from '../types';
+import { formatISODate, monthGrid, parseISODate, WEEKDAY_LABELS } from '../lib/date';
+import { eventsOnDay, sortEvents } from '../lib/events';
+import { EventRow } from './EventRow';
+
+interface CalendarViewProps {
+  events: EventItem[];
+  today: string;
+  onEdit(event: EventItem): void;
+  onToggle(id: string): void;
+  onDelete(event: EventItem): void;
+  onAddForDate(iso: string): void;
+}
+
+export function CalendarView({
+  events,
+  today,
+  onEdit,
+  onToggle,
+  onDelete,
+  onAddForDate
+}: CalendarViewProps) {
+  const initial = parseISODate(today) ?? new Date();
+  const [view, setView] = useState({ year: initial.getFullYear(), month: initial.getMonth() });
+  const [selectedISO, setSelectedISO] = useState(today);
+
+  const cells = useMemo(() => monthGrid(view.year, view.month, today), [view, today]);
+  const byDay = useMemo(() => {
+    const map = new Map<string, EventItem[]>();
+    for (const ev of events) {
+      const list = map.get(ev.dueDate);
+      if (list) list.push(ev);
+      else map.set(ev.dueDate, [ev]);
+    }
+    return map;
+  }, [events]);
+  const dayEvents = useMemo(() => sortEvents(eventsOnDay(events, selectedISO)), [events, selectedISO]);
+
+  const goMonth = (delta: number) => {
+    setView((v) => {
+      const d = new Date(v.year, v.month + delta, 1);
+      return { year: d.getFullYear(), month: d.getMonth() };
+    });
+  };
+  const goToday = () => {
+    const d = parseISODate(today) ?? new Date();
+    setView({ year: d.getFullYear(), month: d.getMonth() });
+    setSelectedISO(today);
+  };
+
+  return (
+    <div className="calendar-view">
+      <div className="calendar-card">
+        <div className="calendar-header">
+          <button type="button" className="nav-btn" onClick={() => goMonth(-1)} aria-label="上个月">
+            ‹
+          </button>
+          <div className="month-label">
+            {view.year}年{view.month + 1}月
+          </div>
+          <button type="button" className="nav-btn" onClick={() => goMonth(1)} aria-label="下个月">
+            ›
+          </button>
+          <button type="button" className="today-link" onClick={goToday}>
+            回到今天
+          </button>
+        </div>
+
+        <div className="weekdays">
+          {WEEKDAY_LABELS.map((label, index) => (
+            <div key={label} className={index >= 5 ? 'weekend' : ''}>
+              周{label}
+            </div>
+          ))}
+        </div>
+
+        <div className="calendar-grid">
+          {cells.map((cell) => {
+            const dayList = byDay.get(cell.iso) ?? [];
+            const isSelected = cell.iso === selectedISO;
+            const classes = [
+              'calendar-cell',
+              cell.inMonth ? '' : 'muted',
+              cell.isToday ? 'today' : '',
+              isSelected ? 'selected' : ''
+            ]
+              .filter(Boolean)
+              .join(' ');
+            return (
+              <button
+                key={cell.iso}
+                type="button"
+                className={classes}
+                onClick={() => setSelectedISO(cell.iso)}
+              >
+                <span className="cell-day">{cell.day}</span>
+                <span className="markers">
+                  {dayList.slice(0, 3).map((ev) => (
+                    <span
+                      key={ev.id}
+                      className={`marker ${ev.completed ? 'done' : 'active'}`}
+                      aria-hidden="true"
+                    />
+                  ))}
+                  {dayList.length > 3 && <span className="marker-more">+{dayList.length - 3}</span>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="agenda-section">
+        <div className="agenda-title">
+          {formatISODate(selectedISO)}
+          {selectedISO === today && <span className="agenda-today-tag">今天</span>}
+        </div>
+        {dayEvents.length === 0 ? (
+          <div className="agenda-empty">
+            <p>这一天还没有事件</p>
+            <button type="button" className="add-day-btn" onClick={() => onAddForDate(selectedISO)}>
+              ＋ 给这一天添加事件
+            </button>
+          </div>
+        ) : (
+          <div className="event-list">
+            {dayEvents.map((ev) => (
+              <EventRow
+                key={ev.id}
+                event={ev}
+                today={today}
+                onToggle={onToggle}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
