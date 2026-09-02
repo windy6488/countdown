@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import type { EventItem } from '../types';
+import type { Category, EventItem } from '../types';
 import { formatISODate, monthGrid, parseISODate, WEEKDAY_LABELS } from '../lib/date';
 import { eventsOnDay, sortEvents } from '../lib/events';
 import { EventRow } from './EventRow';
 
 interface CalendarViewProps {
   events: EventItem[];
+  categories: Category[];
   today: string;
   onEdit(event: EventItem): void;
   onToggle(id: string): void;
@@ -15,6 +16,7 @@ interface CalendarViewProps {
 
 export function CalendarView({
   events,
+  categories,
   today,
   onEdit,
   onToggle,
@@ -26,6 +28,7 @@ export function CalendarView({
   const [selectedISO, setSelectedISO] = useState(today);
 
   const cells = useMemo(() => monthGrid(view.year, view.month, today), [view, today]);
+  const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories]);
   const byDay = useMemo(() => {
     const map = new Map<string, EventItem[]>();
     for (const ev of events) {
@@ -130,6 +133,7 @@ export function CalendarView({
                 key={ev.id}
                 event={ev}
                 today={today}
+                categoryName={ev.categoryId ? categoryMap.get(ev.categoryId) : undefined}
                 onToggle={onToggle}
                 onEdit={onEdit}
                 onDelete={onDelete}

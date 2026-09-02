@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent } from 'react';
-import type { EventItem } from '../types';
+import type { Category, EventItem } from '../types';
 import { isValidISODate } from '../lib/date';
 
 export type EventFormState =
@@ -10,20 +10,29 @@ export interface EventFormValue {
   name: string;
   details: string;
   dueDate: string;
+  categoryId: string | null;
   completed: boolean;
 }
 
 interface EventFormSheetProps {
   form: EventFormState | null;
+  categories: Category[];
   onClose(): void;
   onSubmit(form: EventFormState, value: EventFormValue): void;
   onRequestDelete(event: EventItem): void;
 }
 
-export function EventFormSheet({ form, onClose, onSubmit, onRequestDelete }: EventFormSheetProps) {
+export function EventFormSheet({
+  form,
+  categories,
+  onClose,
+  onSubmit,
+  onRequestDelete
+}: EventFormSheetProps) {
   const [name, setName] = useState('');
   const [details, setDetails] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,11 +42,13 @@ export function EventFormSheet({ form, onClose, onSubmit, onRequestDelete }: Eve
       setName(form.event.name);
       setDetails(form.event.details);
       setDueDate(form.event.dueDate);
+      setCategoryId(form.event.categoryId);
       setCompleted(form.event.completed);
     } else {
       setName('');
       setDetails('');
       setDueDate(form.defaultDueDate ?? '');
+      setCategoryId(null);
       setCompleted(false);
     }
     setError('');
@@ -56,7 +67,13 @@ export function EventFormSheet({ form, onClose, onSubmit, onRequestDelete }: Eve
       setError('请选择有效的截止日期');
       return;
     }
-    onSubmit(form, { name: trimmed, details: details.trim(), dueDate, completed });
+    onSubmit(form, {
+      name: trimmed,
+      details: details.trim(),
+      dueDate,
+      categoryId,
+      completed
+    });
   };
 
   return (
@@ -94,6 +111,31 @@ export function EventFormSheet({ form, onClose, onSubmit, onRequestDelete }: Eve
             <span>截止日期 *</span>
             <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </label>
+          <div className="field">
+            <span>分类</span>
+            <div className="chip-select">
+              <button
+                type="button"
+                className={`chip-btn${categoryId === null ? ' active' : ''}`}
+                onClick={() => setCategoryId(null)}
+              >
+                未分类
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`chip-btn${categoryId === cat.id ? ' active' : ''}`}
+                  onClick={() => setCategoryId(cat.id)}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+            {categories.length === 0 && (
+              <p className="field-hint">暂无分类，可在列表页点“＋ 分类”添加</p>
+            )}
+          </div>
           {form.kind === 'edit' && (
             <label className="checkbox-row">
               <input

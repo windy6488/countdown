@@ -6,12 +6,20 @@ import { formatISODate, formatISODateTime } from '../lib/date';
 interface EventRowProps {
   event: EventItem;
   today: string;
+  categoryName?: string;
   onToggle(id: string): void;
   onEdit(event: EventItem): void;
   onDelete(event: EventItem): void;
 }
 
-export function EventRow({ event, today, onToggle, onEdit, onDelete }: EventRowProps) {
+export function EventRow({
+  event,
+  today,
+  categoryName,
+  onToggle,
+  onEdit,
+  onDelete
+}: EventRowProps) {
   const [expanded, setExpanded] = useState(false);
   useEffect(() => {
     setExpanded(false);
@@ -42,9 +50,28 @@ export function EventRow({ event, today, onToggle, onEdit, onDelete }: EventRowP
         </label>
         <div className="event-text">
           <div className="event-name">{event.name}</div>
-          <div className="event-meta">{formatISODate(event.dueDate)}</div>
+          <div className="event-meta">
+            {formatISODate(event.dueDate)}
+            {categoryName ? ` · ${categoryName}` : ''}
+          </div>
         </div>
-        <span className={`badge badge-${stateClass}`}>{event.completed ? '已完成' : info.label}</span>
+        {event.completed ? (
+          <span className="badge badge-done">已完成</span>
+        ) : (
+          <span className={`countdown-text c-${info.state}`}>
+            {info.state === 'dueToday' ? (
+              '今天到期'
+            ) : info.state === 'overdue' ? (
+              <>
+                已过期 <b>{-info.days}</b> 天
+              </>
+            ) : (
+              <>
+                还剩 <b>{info.days}</b> 天
+              </>
+            )}
+          </span>
+        )}
         {event.completed && <span className={`chevron${expanded ? ' open' : ''}`} aria-hidden="true" />}
       </div>
 
@@ -53,6 +80,7 @@ export function EventRow({ event, today, onToggle, onEdit, onDelete }: EventRowP
           <p className="event-details">{event.details ? event.details : '（无内容）'}</p>
           <div className="detail-meta">
             <span>截止 {formatISODate(event.dueDate)}</span>
+            {categoryName && <span>分类 {categoryName}</span>}
             {event.completedAt && <span>完成于 {formatISODateTime(event.completedAt)}</span>}
           </div>
           <div className="detail-actions">

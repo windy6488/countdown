@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import type { EventItem, TabKey } from './types';
-import { useEvents } from './hooks/useEvents';
+import type { CategoryFilter, EventItem, TabKey } from './types';
+import { useAppData } from './hooks/useAppData';
 import { downloadBackup, readBackupFile } from './lib/backup';
 import { todayISO } from './lib/date';
 import { CalendarView } from './components/CalendarView';
+import { CategorySheet } from './components/CategorySheet';
 import { ConfirmDialog, type ConfirmState } from './components/ConfirmDialog';
 import {
   EventFormSheet,
@@ -74,18 +75,25 @@ function PlusIcon() {
 export default function App() {
   const {
     events,
+    categories,
+    settings,
     toast,
     showToast,
     addEvent,
     updateEvent,
     toggleCompleted,
     removeById,
-    replaceAll
-  } = useEvents();
+    addCategory,
+    removeCategory,
+    setCompletedMode,
+    importData
+  } = useAppData();
   const [tab, setTab] = useState<TabKey>('list');
   const [today, setToday] = useState(todayISO);
   const [form, setForm] = useState<EventFormState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmWithAction | null>(null);
+  const [categorySheetOpen, setCategorySheetOpen] = useState(false);
+  const [filter, setFilter] = useState<CategoryFilter>({ kind: 'all' });
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -94,7 +102,7 @@ export default function App() {
   }, []);
 
   const handleExport = () => {
-    downloadBackup(events);
+    downloadBackup(events, categories);
     showToast('已导出备份文件');
   };
 
@@ -104,10 +112,10 @@ export default function App() {
       const backup = await readBackupFile(file);
       setConfirm({
         title: '导入备份',
-        message: `导入将覆盖当前全部 ${events.length} 个事件，确定继续吗？`,
+        message: `导入将覆盖当前全部 ${events.length} 个事件和 ${categories.length} 个分类，确定继续吗？`,
         confirmText: '覆盖导入',
         onConfirm: () => {
-          replaceAll(backup.events);
+          importData({ events: backup.events, categories: backup.categories });
           setConfirm(null);
         }
       });
@@ -128,8 +136,27 @@ export default function App() {
     });
   };
 
+  const requestDeleteCategory = (category: { id: string; name: string }) => {
+    setConfirm({
+      title: '删除分类',
+      message: `删除分类「${category.name}」后，该分类下的事件会变为“未分类”。确定删除？`,
+      onConfirm: () => {
+        removeCategory(category.id);
+        if (filter.kind === 'category' && filter.id === category.id) {
+          setFilter({ kind: 'all' });
+        }
+        setConfirm(null);
+      }
+    });
+  };
+
   const handleSubmit = (source: EventFormState, value: EventFormValue) => {
-    const input = { name: value.name, details: value.details, dueDate: value.dueDate };
+    const input = {
+      name: value.name,
+      details: value.details,
+      dueDate: value.dueDate,
+      categoryId: value.categoryId
+    };
     if (source.kind === 'create') {
       addEvent(input);
     } else {
@@ -167,7 +194,13 @@ export default function App() {
         {tab === 'list' ? (
           <EventList
             events={events}
+            categories={categories}
             today={today}
+            filter={filter}
+            completedMode={settings.completedMode}
+            onFilterChange={setFilter}
+            onCompletedModeChange={setCompletedMode}
+            onManageCategories={() => setCategorySheetOpen(true)}
             onEdit={(ev) => setForm({ kind: 'edit', event: ev })}
             onToggle={toggleCompleted}
             onDelete={requestDelete}
@@ -175,6 +208,7 @@ export default function App() {
         ) : (
           <CalendarView
             events={events}
+            categories={categories}
             today={today}
             onEdit={(ev) => setForm({ kind: 'edit', event: ev })}
             onToggle={toggleCompleted}
@@ -214,9 +248,17 @@ export default function App() {
 
       <EventFormSheet
         form={form}
+        categories={categories}
         onClose={() => setForm(null)}
         onSubmit={handleSubmit}
         onRequestDelete={requestDelete}
+      />
+      <CategorySheet
+        open={categorySheetOpen}
+        categories={categories}
+        onAdd={(name) => addCategory(name)}
+        onDelete={requestDeleteCategory}
+        onClose={() => setCategorySheetOpen(false)}
       />
       <ConfirmDialog
         state={confirm}

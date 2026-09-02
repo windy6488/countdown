@@ -787,3 +787,210 @@ button {
     transform: translate(-50%, 0);
   }
 }
+
+/* ===== 分类筛选与列表显示选项 ===== */
+.list-controls {
+  padding: 8px 14px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.filter-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  scrollbar-width: none;
+}
+
+.filter-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.chip-btn {
+  flex: none;
+  border: 1px solid #dbe1ec;
+  background: #fff;
+  color: #4b5568;
+  font-size: 13px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.chip-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.chip-manage {
+  border-style: dashed;
+  color: var(--primary);
+  border-color: #a9bdec;
+  background: #f4f7ff;
+}
+
+.view-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.view-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.segmented {
+  display: inline-flex;
+  background: #e9edf5;
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.segmented button {
+  border: none;
+  background: transparent;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #5b6273;
+  white-space: nowrap;
+}
+
+.segmented button.active {
+  background: #fff;
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(24, 39, 75, 0.12);
+}
+
+/* ===== 大号倒数天数 ===== */
+.countdown-text {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.countdown-text b {
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.countdown-text.c-overdue {
+  color: var(--danger);
+}
+
+.countdown-text.c-dueToday {
+  color: var(--warn);
+  font-size: 15px;
+}
+
+.countdown-text.c-upcoming {
+  color: var(--primary);
+}
+
+/* ===== 分类选择与分类管理 ===== */
+.chip-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.cat-hint {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+.cat-empty {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  padding: 14px 0;
+  margin: 0;
+}
+
+.cat-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8faff;
+  border: 1px solid #e4e8f0;
+  border-radius: 10px;
+  padding: 8px 10px 8px 14px;
+}
+
+.cat-name {
+  flex: 1;
+  font-size: 14px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat-del-btn {
+  flex: none;
+  border: 1px solid #f0c6c8;
+  background: #fff7f7;
+  color: var(--danger);
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.cat-add {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.cat-add input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #d7ddeb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  background: #fbfcfe;
+  min-height: 44px;
+}
+
+.cat-add input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(47, 107, 237, 0.18);
+  background: #fff;
+}
+
+.cat-add-btn {
+  flex: none;
+  padding: 0 20px;
+  min-height: 44px;
+}
