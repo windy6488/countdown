@@ -20,8 +20,8 @@ const MAX_RANGE_BARS = 3;
 
 function colorForEvent(event: EventItem, today: string): string {
   if (event.completed) return '#b9c0cf';
-  if (event.dueDate < today) return '#e5484d';
   if (event.important) return '#8b5cf6';
+  if (event.dueDate < today) return '#e5484d';
   let hash = 0;
   for (let i = 0; i < event.id.length; i++) {
     hash = (hash * 31 + event.id.charCodeAt(i)) >>> 0;
@@ -146,7 +146,7 @@ export function CalendarView({
                     {dayList.slice(0, 3).map((ev) => (
                       <span
                         key={ev.id}
-                        className={`marker ${ev.completed ? 'done' : 'active'}`}
+                        className={`marker ${ev.completed ? 'done' : ev.important ? 'important' : 'active'}`}
                         aria-hidden="true"
                       />
                     ))}
