@@ -30,6 +30,13 @@ describe('parser 批量文字解析', () => {
     expect(results[0]).toMatchObject({ name: '抢购（还有优惠）', days: 3 });
   });
 
+  it('识别“已经 N 天”并换算为过去的日期', () => {
+    const results = parseBatchText('入职已经3天\n军训已经1天', '2026-09-06');
+    expect(results.every((r) => r.ok)).toBe(true);
+    expect(results[0]).toMatchObject({ name: '入职', days: -3, dueDate: '2026-09-03' });
+    expect(results[1]).toMatchObject({ name: '军训', days: -1, dueDate: '2026-09-05' });
+  });
+
   it('无法识别的行会被标记并给出原因', () => {
     const results = parseBatchText('这是一条没有天数的文字\n还有2天', '2026-09-06');
     expect(results[0].ok).toBe(false);

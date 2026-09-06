@@ -1,6 +1,6 @@
 import { useMemo, useState, type MouseEvent } from 'react';
 import type { EventInput } from '../lib/events';
-import { parseBatchText } from '../lib/parser';
+import { parseBatchText, type ParsedImportLine } from '../lib/parser';
 import { formatISODate } from '../lib/date';
 
 interface BatchImportSheetProps {
@@ -8,6 +8,13 @@ interface BatchImportSheetProps {
   today: string;
   onClose(): void;
   onImport(inputs: EventInput[]): void;
+}
+
+function countLabel(item: ParsedImportLine): string {
+  if (!item.ok || item.days === undefined) return '';
+  if (item.days < 0) return `已经 ${-item.days} 天`;
+  if (item.days === 0) return '今天到期';
+  return `还有 ${item.days} 天`;
 }
 
 export function BatchImportSheet({ open, today, onClose, onImport }: BatchImportSheetProps) {
@@ -42,14 +49,13 @@ export function BatchImportSheet({ open, today, onClose, onImport }: BatchImport
         </div>
         <div className="sheet-body">
           <p className="cat-hint">
-            每行一个事件，支持格式：<b>事件名称还有 N 天</b>（也支持“还剩 N 天”）。例如：
+            每行一个事件，支持“还有 N 天”“还剩 N 天”“已经 N 天”，识别失败的行不会被导入。
           </p>
-          <p className="batch-example">动车还有1天<br />报道还有2天</p>
           <textarea
             className="batch-textarea"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={'动车还有1天\n再看看一系统任务还有1天\n报道还有2天'}
+            placeholder="把要导入的文字粘贴到这里，一行一个事件"
             rows={6}
           />
           {results.length > 0 && (
@@ -60,7 +66,7 @@ export function BatchImportSheet({ open, today, onClose, onImport }: BatchImport
                     <span>
                       <span className="batch-name">{item.name}</span>
                       <span className="batch-detail">
-                        还有 {item.days} 天 → {formatISODate(item.dueDate as string)}
+                        {countLabel(item)} → {formatISODate(item.dueDate as string)}
                       </span>
                     </span>
                   ) : (

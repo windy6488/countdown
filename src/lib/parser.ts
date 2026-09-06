@@ -12,12 +12,15 @@ export interface ParsedImportLine {
 const NAME_MAX = 80;
 
 function parseLine(raw: string, today: string): ParsedImportLine {
-  // 贪婪匹配：名称里即使含有“还有”也尽量归到事件名；允许名称为空以便给出“缺少名称”提示
-  const match = raw.match(/^([\s\S]*)(?:还有|还剩)\s*(\d+)\s*天$/);
+  // 贪婪匹配：名称里即使含有“还有/已经”也尽量归到事件名；允许名称为空以便给出“缺少名称”提示
+  const match = raw.match(/^([\s\S]*)(还有|还剩|已经)\s*(\d+)\s*天$/);
   if (!match) {
-    return { raw, ok: false, reason: '无法识别（支持：事件名称还有 N 天 / 事件名称还剩 N 天）' };
+    return { raw, ok: false, reason: '无法识别（支持：事件名称还有 N 天 / 还剩 N 天 / 已经 N 天）' };
   }
-  const days = Number(match[2]);
+  const phrase = match[2];
+  const amount = Number(match[3]);
+  // “已经 N 天”表示这件事已经过去 N 天，截止日期按 今天 - N 天 计算
+  const days = phrase === '已经' ? -amount : amount;
   const name = match[1]
     .replace(/[\s:：,，。、;；-]+$/u, '')
     .trim();
