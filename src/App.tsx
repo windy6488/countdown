@@ -4,6 +4,7 @@ import { useAppData } from './hooks/useAppData';
 import { downloadBackup, readBackupFile } from './lib/backup';
 import { todayISO } from './lib/date';
 import { CalendarView } from './components/CalendarView';
+import { BatchImportSheet } from './components/BatchImportSheet';
 import { CategorySheet } from './components/CategorySheet';
 import { ConfirmDialog, type ConfirmState } from './components/ConfirmDialog';
 import {
@@ -80,6 +81,7 @@ export default function App() {
     toast,
     showToast,
     addEvent,
+    addMany,
     updateEvent,
     toggleCompleted,
     removeById,
@@ -93,6 +95,7 @@ export default function App() {
   const [form, setForm] = useState<EventFormState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmWithAction | null>(null);
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
+  const [batchImportOpen, setBatchImportOpen] = useState(false);
   const [filter, setFilter] = useState<CategoryFilter>({ kind: 'all' });
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -201,6 +204,7 @@ export default function App() {
             onFilterChange={setFilter}
             onCompletedModeChange={setCompletedMode}
             onManageCategories={() => setCategorySheetOpen(true)}
+            onBatchImport={() => setBatchImportOpen(true)}
             onEdit={(ev) => setForm({ kind: 'edit', event: ev })}
             onToggle={toggleCompleted}
             onDelete={requestDelete}
@@ -259,6 +263,15 @@ export default function App() {
         onAdd={(name) => addCategory(name)}
         onDelete={requestDeleteCategory}
         onClose={() => setCategorySheetOpen(false)}
+      />
+      <BatchImportSheet
+        open={batchImportOpen}
+        today={today}
+        onClose={() => setBatchImportOpen(false)}
+        onImport={(inputs) => {
+          addMany(inputs);
+          setBatchImportOpen(false);
+        }}
       />
       <ConfirmDialog
         state={confirm}

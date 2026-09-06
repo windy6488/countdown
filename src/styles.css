@@ -994,3 +994,97 @@ button {
   padding: 0 20px;
   min-height: 44px;
 }
+/* ===== 批量导入 ===== */
+.batch-example {
+  font-size: 12px;
+  color: #5b6273;
+  background: #f2f5fb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0 0 12px;
+  line-height: 1.7;
+}
+
+.batch-textarea {
+  width: 100%;
+  border: 1px solid #d7ddeb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.7;
+  color: var(--text);
+  background: #fbfcfe;
+  resize: vertical;
+}
+
+.batch-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(47, 107, 237, 0.18);
+  background: #fff;
+}
+
+.batch-preview {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 34dvh;
+  overflow-y: auto;
+}
+
+.batch-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 8px;
+}
+
+.batch-line.ok {
+  background: #eefaf3;
+  color: #1d7a4f;
+}
+
+.batch-line.fail {
+  background: #fff3f3;
+  color: #b04348;
+}
+
+.batch-name,
+.batch-raw {
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.batch-raw {
+  text-decoration: line-through;
+}
+
+.batch-detail {
+  flex: none;
+  font-size: 12px;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.batch-footer {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.batch-count {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sheet-footer .btn:disabled {
+  opacity: 0.5;
+}

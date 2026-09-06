@@ -12,6 +12,7 @@ interface EventListProps {
   onFilterChange(filter: CategoryFilter): void;
   onCompletedModeChange(mode: CompletedMode): void;
   onManageCategories(): void;
+  onBatchImport(): void;
   onEdit(event: EventItem): void;
   onToggle(id: string): void;
   onDelete(event: EventItem): void;
@@ -26,6 +27,7 @@ export function EventList({
   onFilterChange,
   onCompletedModeChange,
   onManageCategories,
+  onBatchImport,
   onEdit,
   onToggle,
   onDelete
@@ -42,15 +44,6 @@ export function EventList({
     return sortEvents(list);
   }, [events, completedMode, filter]);
   const hasUncategorized = useMemo(() => events.some((ev) => ev.categoryId === null), [events]);
-
-  if (events.length === 0) {
-    return (
-      <div className="empty-state">
-        <p className="empty-title">还没有事件</p>
-        <p className="empty-hint">点右下角 ＋ 新建第一个事件吧</p>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -85,6 +78,9 @@ export function EventList({
           <button type="button" className="chip-btn chip-manage" onClick={onManageCategories}>
             ＋ 分类
           </button>
+          <button type="button" className="chip-btn chip-manage" onClick={onBatchImport}>
+            批量导入
+          </button>
         </div>
         <div className="view-options">
           <span className="view-label">已完成事件</span>
@@ -107,7 +103,12 @@ export function EventList({
         </div>
       </div>
 
-      {visible.length === 0 ? (
+      {events.length === 0 ? (
+        <div className="empty-state">
+          <p className="empty-title">还没有事件</p>
+          <p className="empty-hint">点右下角 ＋ 新建，或点上方“批量导入”粘贴多行文字</p>
+        </div>
+      ) : visible.length === 0 ? (
         <div className="empty-state">
           <p className="empty-title">没有符合条件的事件</p>
           <p className="empty-hint">试试切换分类筛选或已完成事件设置</p>

@@ -86,6 +86,14 @@ export function useAppData() {
     [events, commitEvents]
   );
 
+  const addMany = useCallback(
+    (inputs: EventInput[]) => {
+      if (inputs.length === 0) return;
+      const created = inputs.map((input) => createEvent(input));
+      commitEvents([...events, ...created], `已批量导入 ${created.length} 个事件`);
+    },
+    [events, commitEvents]
+  );
   const updateEvent = useCallback(
     (id: string, patch: EventPatch, successText?: string) => {
       commitEvents(applyPatch(events, id, patch), successText);
@@ -171,6 +179,7 @@ export function useAppData() {
     toast,
     showToast,
     addEvent,
+    addMany,
     updateEvent,
     toggleCompleted,
     removeById,
