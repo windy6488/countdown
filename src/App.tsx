@@ -97,6 +97,7 @@ export default function App() {
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
   const [batchImportOpen, setBatchImportOpen] = useState(false);
   const [filter, setFilter] = useState<CategoryFilter>({ kind: 'all' });
+  const [calendarDate, setCalendarDate] = useState(today);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   // 手机返回键：打开弹层时推入一条历史记录，返回键先关最上层弹层而不是关闭网页
@@ -263,6 +264,7 @@ export default function App() {
             onToggle={toggleCompleted}
             onDelete={requestDelete}
             onAddForDate={(iso) => setForm({ kind: 'create', defaultDueDate: iso })}
+            onSelectedDateChange={setCalendarDate}
           />
         )}
       </main>
@@ -271,7 +273,7 @@ export default function App() {
         type="button"
         className="fab"
         aria-label="新建事件"
-        onClick={() => setForm({ kind: 'create', defaultDueDate: today })}
+        onClick={() => setForm({ kind: 'create', defaultDueDate: tab === 'list' ? today : calendarDate })}
       >
         <PlusIcon />
       </button>

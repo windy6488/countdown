@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Category, EventItem } from '../types';
 import { formatISODate, monthGrid, parseISODate, WEEKDAY_LABELS } from '../lib/date';
 import { eventsOnDay, sortEvents } from '../lib/events';
@@ -12,6 +12,7 @@ interface CalendarViewProps {
   onToggle(id: string): void;
   onDelete(event: EventItem): void;
   onAddForDate(iso: string): void;
+  onSelectedDateChange(iso: string): void;
 }
 
 export function CalendarView({
@@ -21,7 +22,8 @@ export function CalendarView({
   onEdit,
   onToggle,
   onDelete,
-  onAddForDate
+  onAddForDate,
+  onSelectedDateChange
 }: CalendarViewProps) {
   const initial = parseISODate(today) ?? new Date();
   const [view, setView] = useState({ year: initial.getFullYear(), month: initial.getMonth() });
@@ -39,6 +41,10 @@ export function CalendarView({
     return map;
   }, [events]);
   const dayEvents = useMemo(() => sortEvents(eventsOnDay(events, selectedISO)), [events, selectedISO]);
+
+  useEffect(() => {
+    onSelectedDateChange(selectedISO);
+  }, [selectedISO, onSelectedDateChange]);
 
   const goMonth = (delta: number) => {
     setView((v) => {
