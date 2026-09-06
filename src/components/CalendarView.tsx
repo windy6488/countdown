@@ -15,6 +15,19 @@ interface CalendarViewProps {
   onSelectedDateChange(iso: string): void;
 }
 
+const PALETTE = ['#4c8dff', '#f08a3c', '#16a34a', '#8b5cf6', '#ec4899', '#06b6d4', '#d97706', '#64748b'];
+const MAX_RANGE_BARS = 3;
+
+function colorForEvent(event: EventItem, today: string): string {
+  if (event.completed) return '#b9c0cf';
+  if (event.dueDate < today) return '#e5484d';
+  let hash = 0;
+  for (let i = 0; i < event.id.length; i++) {
+    hash = (hash * 31 + event.id.charCodeAt(i)) >>> 0;
+  }
+  return PALETTE[hash % PALETTE.length];
+}
+
 export function CalendarView({
   events,
   categories,
@@ -50,20 +63,8 @@ export function CalendarView({
     onSelectedDateChange(selectedISO);
   }, [selectedISO, onSelectedDateChange]);
 
-  const coversRange = (iso?: string) => {
-    if (!iso) return false;
-    return events.some((ev) => ev.startDate !== null && ev.startDate <= iso && iso <= ev.dueDate);
-  };
-  const rangeKindAt = (iso: string): 'active' | 'overdue' | 'done' | null => {
-    const covering = events.filter(
-      (ev) => ev.startDate !== null && ev.startDate <= iso && iso <= ev.dueDate
-    );
-    if (covering.length === 0) return null;
-    const incomplete = covering.filter((ev) => !ev.completed);
-    if (incomplete.length === 0) return 'done';
-    if (incomplete.some((ev) => ev.dueDate < today)) return 'overdue';
-    return 'active';
-  };
+  const rangeEventsOn = (iso: string): EventItem[] =>
+    events.filter((ev) => ev.startDate !== null && ev.startDate <= iso && iso <= ev.dueDate);
 
   const goMonth = (delta: number) => {
     setView((v) => {
@@ -104,17 +105,10 @@ export function CalendarView({
         </div>
 
         <div className="calendar-grid">
-          {cells.map((cell, index) => {
+          {cells.map((cell) => {
             const dayList = byDay.get(cell.iso) ?? [];
+            const rangeList = rangeEventsOn(cell.iso);
             const isSelected = cell.iso === selectedISO;
-            const kind = rangeKindAt(cell.iso);
-            const prevIso = cells[index - 1]?.iso;
-            const nextIso = cells[index + 1]?.iso;
-            const isRangeStart = kind !== null && !coversRange(prevIso);
-            const isRangeEnd = kind !== null && !coversRange(nextIso);
-            const rangeClass = kind
-              ? ` range range-${kind}${isRangeStart ? ' range-start' : ''}${isRangeEnd ? ' range-end' : ''}`
-              : '';
             const classes = [
               'calendar-cell',
               cell.inMonth ? '' : 'muted',
@@ -122,7 +116,7 @@ export function CalendarView({
               isSelected ? 'selected' : ''
             ]
               .filter(Boolean)
-              .join(' ') + rangeClass;
+              .join(' ');
             return (
               <button
                 key={cell.iso}
@@ -131,16 +125,33 @@ export function CalendarView({
                 onClick={() => setSelectedISO(cell.iso)}
               >
                 <span className="cell-day">{cell.day}</span>
-                <span className="markers">
-                  {dayList.slice(0, 3).map((ev) => (
-                    <span
-                      key={ev.id}
-                      className={`marker ${ev.completed ? 'done' : 'active'}`}
-                      aria-hidden="true"
-                    />
-                  ))}
-                  {dayList.length > 3 && <span className="marker-more">+{dayList.length - 3}</span>}
-                </span>
+                {rangeList.length > 0 && (
+                  <span className="range-bars">
+                    {rangeList.slice(0, MAX_RANGE_BARS).map((ev) => (
+                      <span
+                        key={ev.id}
+                        className="range-bar"
+                        style={{ background: colorForEvent(ev, today) }}
+                        aria-hidden="true"
+                      />
+                    ))}
+                    {rangeList.length > MAX_RANGE_BARS && (
+                      <span className="range-more">+{rangeList.length - MAX_RANGE_BARS}</span>
+                    )}
+                  </span>
+                )}
+                {dayList.length > 0 && (
+                  <span className="markers">
+                    {dayList.slice(0, 3).map((ev) => (
+                      <span
+                        key={ev.id}
+                        className={`marker ${ev.completed ? 'done' : 'active'}`}
+                        aria-hidden="true"
+                      />
+                    ))}
+                    {dayList.length > 3 && <span className="marker-more">+{dayList.length - 3}</span>}
+                  </span>
+                )}
               </button>
             );
           })}
