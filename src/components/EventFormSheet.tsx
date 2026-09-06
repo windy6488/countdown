@@ -94,7 +94,6 @@ export function EventFormSheet({
               onChange={(e) => setName(e.target.value)}
               placeholder="例如：提交项目报告"
               maxLength={80}
-              autoFocus
             />
           </label>
           <label className="field">

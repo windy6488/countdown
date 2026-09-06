@@ -99,6 +99,51 @@ export default function App() {
   const [filter, setFilter] = useState<CategoryFilter>({ kind: 'all' });
   const fileRef = useRef<HTMLInputElement | null>(null);
 
+  // 手机返回键：打开弹层时推入一条历史记录，返回键先关最上层弹层而不是关闭网页
+  const overlayRef = useRef({ form: false, confirm: false, category: false, batch: false });
+  overlayRef.current = {
+    form: form !== null,
+    confirm: confirm !== null,
+    category: categorySheetOpen,
+    batch: batchImportOpen
+  };
+  const historyPushedRef = useRef(false);
+  const anyOverlayOpen = form !== null || confirm !== null || categorySheetOpen || batchImportOpen;
+
+  const closeTopmostOverlay = () => {
+    const flags = overlayRef.current;
+    if (flags.confirm) setConfirm(null);
+    else if (flags.form) setForm(null);
+    else if (flags.category) setCategorySheetOpen(false);
+    else if (flags.batch) setBatchImportOpen(false);
+  };
+
+  useEffect(() => {
+    if (anyOverlayOpen && !historyPushedRef.current) {
+      historyPushedRef.current = true;
+      window.history.pushState({ overlay: true }, '');
+    }
+  }, [anyOverlayOpen]);
+
+  useEffect(() => {
+    if (!anyOverlayOpen) return;
+    const onPopState = () => {
+      const flags = overlayRef.current;
+      let remainsOpen = false;
+      if (flags.confirm) remainsOpen = flags.form || flags.category || flags.batch;
+      else if (flags.form) remainsOpen = flags.category || flags.batch;
+      else if (flags.category) remainsOpen = flags.batch;
+      closeTopmostOverlay();
+      historyPushedRef.current = false;
+      if (remainsOpen) {
+        historyPushedRef.current = true;
+        window.history.pushState({ overlay: true }, '');
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [anyOverlayOpen]);
+
   useEffect(() => {
     const timer = window.setInterval(() => setToday(todayISO()), 30_000);
     return () => window.clearInterval(timer);
