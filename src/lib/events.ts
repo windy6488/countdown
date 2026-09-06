@@ -136,9 +136,11 @@ export function removeEvent(events: EventItem[], id: string): EventItem[] {
 
 /** 未完成按截止日升序排前，已完成按完成时间倒序排在末尾 */
 export function sortEvents(events: EventItem[]): EventItem[] {
-  const byDueDate = (a: EventItem, b: EventItem) =>
-    a.dueDate.localeCompare(b.dueDate) || a.createdAt.localeCompare(b.createdAt);
-  const active = events.filter((ev) => !ev.completed).sort(byDueDate);
+  // 多日事件按开始日期排，单日事件按截止日期排（开始日期即当天）
+  const startKey = (ev: EventItem) => ev.startDate ?? ev.dueDate;
+  const byStartDate = (a: EventItem, b: EventItem) =>
+    startKey(a).localeCompare(startKey(b)) || a.createdAt.localeCompare(b.createdAt);
+  const active = events.filter((ev) => !ev.completed).sort(byStartDate);
   const done = events
     .filter((ev) => ev.completed)
     .sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''));

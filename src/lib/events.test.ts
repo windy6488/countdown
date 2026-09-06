@@ -115,6 +115,21 @@ describe('events 纯函数', () => {
     expect(sortEvents(list).map((e) => e.id)).toEqual(['overdue', 'sooner', 'later', 'done1', 'done2']);
   });
 
+  it('sortEvents 多日事件按开始日期排序', () => {
+    const list = [
+      makeEvent({ id: 'm-late', startDate: '2026-09-10', dueDate: '2026-09-12' }),
+      makeEvent({ id: 'single', dueDate: '2026-09-01' }),
+      makeEvent({ id: 'm-early', startDate: '2026-08-30', dueDate: '2026-09-05' }),
+      makeEvent({
+        id: 'done',
+        completed: true,
+        completedAt: '2026-08-02T00:00:00.000Z',
+        startDate: '2026-07-01',
+        dueDate: '2026-07-05'
+      })
+    ];
+    expect(sortEvents(list).map((e) => e.id)).toEqual(['m-early', 'single', 'm-late', 'done']);
+  });
   it('eventsOnDay 只返回当天事件', () => {
     const list = [makeEvent({ id: 'a', dueDate: '2026-09-02' }), makeEvent({ id: 'b', dueDate: '2026-09-03' })];
     expect(eventsOnDay(list, '2026-09-02').map((e) => e.id)).toEqual(['a']);
