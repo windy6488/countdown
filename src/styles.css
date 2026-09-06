@@ -1149,3 +1149,24 @@ button {
   color: var(--muted);
   text-align: center;
 }
+/* ===== 重要事件（紫色重点高亮） ===== */
+.event-card.is-important {
+  background: #f4ecff;
+  border-color: #d9c2f7;
+  box-shadow:
+    inset 4px 0 0 #8b5cf6,
+    0 1px 3px rgba(24, 39, 75, 0.06);
+}
+
+.event-card.is-important .event-name {
+  color: #4c1d95;
+}
+
+.marker.important {
+  background: #8b5cf6;
+}
+
+.important-row .important-label {
+  font-weight: 600;
+  color: #6d28d9;
+}

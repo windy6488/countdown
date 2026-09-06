@@ -15,12 +15,13 @@ interface CalendarViewProps {
   onSelectedDateChange(iso: string): void;
 }
 
-const PALETTE = ['#4c8dff', '#f08a3c', '#16a34a', '#8b5cf6', '#ec4899', '#06b6d4', '#d97706', '#64748b'];
+const PALETTE = ['#4c8dff', '#f08a3c', '#16a34a', '#ec4899', '#06b6d4', '#d97706', '#64748b', '#f97316'];
 const MAX_RANGE_BARS = 3;
 
 function colorForEvent(event: EventItem, today: string): string {
   if (event.completed) return '#b9c0cf';
   if (event.dueDate < today) return '#e5484d';
+  if (event.important) return '#8b5cf6';
   let hash = 0;
   for (let i = 0; i < event.id.length; i++) {
     hash = (hash * 31 + event.id.charCodeAt(i)) >>> 0;

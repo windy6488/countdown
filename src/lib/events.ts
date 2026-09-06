@@ -1,7 +1,7 @@
 import type { EventItem } from '../types';
 import { isValidISODate } from './date';
 
-/** 解析并归一化事件；旧版本数据缺少 startDate/categoryId 时按无开始日期/未分类处理 */
+/** 解析并归一化事件；旧版本缺少的新字段按默认值处理 */
 export function parseEvent(value: unknown): EventItem | null {
   if (typeof value !== 'object' || value === null) return null;
   const o = value as Record<string, unknown>;
@@ -30,6 +30,11 @@ export function parseEvent(value: unknown): EventItem | null {
     if (typeof o.categoryId !== 'string') return null;
     categoryId = o.categoryId;
   }
+  let important = false;
+  if (o.important !== undefined) {
+    if (typeof o.important !== 'boolean') return null;
+    important = o.important;
+  }
   return {
     id: o.id,
     name: o.name.trim(),
@@ -37,6 +42,7 @@ export function parseEvent(value: unknown): EventItem | null {
     dueDate: o.dueDate,
     startDate,
     categoryId,
+    important,
     completed: o.completed,
     completedAt: o.completedAt,
     createdAt: o.createdAt,
@@ -66,6 +72,7 @@ export interface EventInput {
   dueDate: string;
   startDate?: string | null;
   categoryId?: string | null;
+  important?: boolean;
 }
 
 export function createEvent(input: EventInput): EventItem {
@@ -77,6 +84,7 @@ export function createEvent(input: EventInput): EventItem {
     dueDate: input.dueDate,
     startDate: input.startDate ?? null,
     categoryId: input.categoryId ?? null,
+    important: input.important ?? false,
     completed: false,
     completedAt: null,
     createdAt: now,
@@ -90,6 +98,7 @@ export interface EventPatch {
   dueDate?: string;
   startDate?: string | null;
   categoryId?: string | null;
+  important?: boolean;
   completed?: boolean;
 }
 
@@ -101,11 +110,23 @@ export function applyPatch(events: EventItem[], id: string, patch: EventPatch, n
     const dueDate = patch.dueDate === undefined ? ev.dueDate : patch.dueDate;
     const startDate = patch.startDate === undefined ? ev.startDate : patch.startDate;
     const categoryId = patch.categoryId === undefined ? ev.categoryId : patch.categoryId;
+    const important = patch.important === undefined ? ev.important : patch.important;
     const completed = patch.completed === undefined ? ev.completed : patch.completed;
     let completedAt = ev.completedAt;
     if (patch.completed === true && !ev.completed) completedAt = now;
     if (patch.completed === false) completedAt = null;
-    return { ...ev, name, details, dueDate, startDate, categoryId, completed, completedAt, updatedAt: now };
+    return {
+      ...ev,
+      name,
+      details,
+      dueDate,
+      startDate,
+      categoryId,
+      important,
+      completed,
+      completedAt,
+      updatedAt: now
+    };
   });
 }
 

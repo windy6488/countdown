@@ -205,7 +205,8 @@ export default function App() {
       details: value.details,
       dueDate: value.dueDate,
       startDate: value.startDate === '' ? null : value.startDate,
-      categoryId: value.categoryId
+      categoryId: value.categoryId,
+      important: value.important
     };
     if (source.kind === 'create') {
       addEvent(input);

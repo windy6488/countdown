@@ -67,8 +67,17 @@ export function EventRow({
     return <>已结束 <b>{info.days}</b> 天</>;
   };
 
+  const cardClass = [
+    'event-card',
+    `state-${stateClass}`,
+    event.completed ? 'is-completed' : '',
+    !event.completed && event.important ? 'is-important' : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className={`event-card state-${stateClass}${event.completed ? ' is-completed' : ''}`}>
+    <div className={cardClass}>
       <div className="event-card-main" onClick={handleCardClick}>
         <label className="check" onClick={stop}>
           <input type="checkbox" checked={event.completed} onChange={handleToggle} />

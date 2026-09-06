@@ -26,6 +26,7 @@ const ev: EventItem = {
   details: '',
   dueDate: '2026-09-09',
   startDate: null,
+  important: false,
   categoryId: null,
   completed: false,
   completedAt: null,
@@ -58,6 +59,7 @@ describe('storage 事件读写与损坏回退', () => {
     const legacy = { ...ev };
     delete (legacy as Partial<EventItem>).categoryId;
     delete (legacy as Partial<EventItem>).startDate;
+    delete (legacy as Partial<EventItem>).important;
     const storage = memoryStorage({
       [EVENTS_STORAGE_KEY]: JSON.stringify([legacy, { id: 'bad', name: '' }])
     });
@@ -65,6 +67,7 @@ describe('storage 事件读写与损坏回退', () => {
     expect(res.events).toHaveLength(1);
     expect(res.events[0].categoryId).toBeNull();
     expect(res.events[0].startDate).toBeNull();
+    expect(res.events[0].important).toBe(false);
     expect(res.ok).toBe(false);
   });
 

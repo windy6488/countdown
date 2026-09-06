@@ -12,6 +12,7 @@ export interface EventFormValue {
   startDate: string; // '' 表示未设置开始日期
   dueDate: string;
   categoryId: string | null;
+  important: boolean;
   completed: boolean;
 }
 
@@ -35,6 +36,7 @@ export function EventFormSheet({
   const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [important, setImportant] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState('');
 
@@ -46,6 +48,7 @@ export function EventFormSheet({
       setStartDate(form.event.startDate ?? '');
       setDueDate(form.event.dueDate);
       setCategoryId(form.event.categoryId);
+      setImportant(form.event.important);
       setCompleted(form.event.completed);
     } else {
       setName('');
@@ -53,6 +56,7 @@ export function EventFormSheet({
       setStartDate('');
       setDueDate(form.defaultDueDate ?? '');
       setCategoryId(null);
+      setImportant(false);
       setCompleted(false);
     }
     setError('');
@@ -87,6 +91,7 @@ export function EventFormSheet({
       startDate,
       dueDate,
       categoryId,
+      important,
       completed
     });
   };
@@ -154,6 +159,14 @@ export function EventFormSheet({
               <p className="field-hint">暂无分类，可在列表页点“＋ 分类”添加</p>
             )}
           </div>
+          <label className="checkbox-row important-row">
+            <input
+              type="checkbox"
+              checked={important}
+              onChange={(e) => setImportant(e.target.checked)}
+            />
+            <span className="important-label">标记为重要（紫色重点高亮）</span>
+          </label>
           {form.kind === 'edit' && (
             <label className="checkbox-row">
               <input

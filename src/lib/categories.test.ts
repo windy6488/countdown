@@ -9,6 +9,7 @@ function makeEvent(overrides: Partial<EventItem> = {}): EventItem {
     details: '',
     dueDate: '2026-09-10',
     startDate: null,
+    important: false,
     categoryId: 'c1',
     completed: false,
     completedAt: null,
