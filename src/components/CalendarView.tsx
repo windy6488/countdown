@@ -187,7 +187,7 @@ export function CalendarView({
                       <span
                         key={ev.id}
                         className="marker"
-                        style={{ background: colors.get(ev.id) ?? GRAY }}
+                        style={{ background: ev.completed ? GRAY : ev.important ? RED : '#4c8dff' }}
                         aria-hidden="true"
                       />
                     ))}
