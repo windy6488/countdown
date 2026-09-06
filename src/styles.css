@@ -1170,3 +1170,34 @@ button {
   font-weight: 600;
   color: #6d28d9;
 }
+/* ===== 日历连续横条（重要=红，重叠自动换色） ===== */
+.calendar-grid {
+  gap: 2px 0;
+}
+
+.calendar-cell {
+  padding: 5px 0 3px;
+}
+
+.range-bars {
+  width: 100%;
+  gap: 2px;
+  margin-top: 2px;
+  min-height: 5px;
+}
+
+.range-bar {
+  height: 5px;
+  width: 100%;
+  border-radius: 0;
+}
+
+.range-bar.bar-start {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+}
+
+.range-bar.bar-end {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}

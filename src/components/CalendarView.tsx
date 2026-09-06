@@ -16,17 +16,16 @@ interface CalendarViewProps {
 }
 
 const PALETTE = ['#4c8dff', '#f08a3c', '#16a34a', '#ec4899', '#06b6d4', '#d97706', '#64748b', '#f97316'];
-const MAX_RANGE_BARS = 3;
+const RED = '#e5484d';
+const GRAY = '#b9c0cf';
 
-function colorForEvent(event: EventItem, today: string): string {
-  if (event.completed) return '#b9c0cf';
-  if (event.important) return '#8b5cf6';
-  if (event.dueDate < today) return '#e5484d';
+function normalCandidates(event: EventItem): string[] {
   let hash = 0;
   for (let i = 0; i < event.id.length; i++) {
     hash = (hash * 31 + event.id.charCodeAt(i)) >>> 0;
   }
-  return PALETTE[hash % PALETTE.length];
+  const start = hash % PALETTE.length;
+  return Array.from({ length: PALETTE.length }, (_, i) => PALETTE[(start + i) % PALETTE.length]);
 }
 
 export function CalendarView({
@@ -64,8 +63,41 @@ export function CalendarView({
     onSelectedDateChange(selectedISO);
   }, [selectedISO, onSelectedDateChange]);
 
-  const rangeEventsOn = (iso: string): EventItem[] =>
-    events.filter((ev) => ev.startDate !== null && ev.startDate <= iso && iso <= ev.dueDate);
+  // 某天所有相关事件（单日 = 当天，多日 = 处于区间内）
+  const eventsOnIso = (iso: string): EventItem[] =>
+    events.filter((ev) => (ev.startDate ? ev.startDate <= iso && iso <= ev.dueDate : ev.dueDate === iso));
+
+  // 同一天内避免颜色重复：过期事件优先红色，其次重要事件红色，均被占用时顺延到备用色
+  const colorsForDay = (iso: string): Map<string, string> => {
+    const score = (ev: EventItem) =>
+      ev.completed ? 9 : ev.dueDate < today ? 0 : ev.important ? 1 : 2;
+    const sorted = [...eventsOnIso(iso)].sort(
+      (a, b) =>
+        score(a) - score(b) ||
+        a.dueDate.localeCompare(b.dueDate) ||
+        a.createdAt.localeCompare(b.createdAt)
+    );
+    const used = new Set<string>();
+    const result = new Map<string, string>();
+    for (const ev of sorted) {
+      if (ev.completed) {
+        result.set(ev.id, GRAY);
+        continue;
+      }
+      let candidates: string[];
+      if (ev.dueDate < today) {
+        candidates = [RED, '#d97706', '#ec4899', '#f97316', '#16a34a', '#4c8dff', '#06b6d4'];
+      } else if (ev.important) {
+        candidates = [RED, '#f59e0b', '#ec4899', '#16a34a', '#4c8dff', '#06b6d4', '#8b5cf6'];
+      } else {
+        candidates = normalCandidates(ev);
+      }
+      const color = candidates.find((c) => !used.has(c)) ?? RED;
+      used.add(color);
+      result.set(ev.id, color);
+    }
+    return result;
+  };
 
   const goMonth = (delta: number) => {
     setView((v) => {
@@ -108,7 +140,10 @@ export function CalendarView({
         <div className="calendar-grid">
           {cells.map((cell) => {
             const dayList = byDay.get(cell.iso) ?? [];
-            const rangeList = rangeEventsOn(cell.iso);
+            const colors = colorsForDay(cell.iso);
+            const rangeList = colors.size > 0
+              ? eventsOnIso(cell.iso).filter((ev) => ev.startDate !== null)
+              : [];
             const isSelected = cell.iso === selectedISO;
             const classes = [
               'calendar-cell',
@@ -128,17 +163,22 @@ export function CalendarView({
                 <span className="cell-day">{cell.day}</span>
                 {rangeList.length > 0 && (
                   <span className="range-bars">
-                    {rangeList.slice(0, MAX_RANGE_BARS).map((ev) => (
-                      <span
-                        key={ev.id}
-                        className="range-bar"
-                        style={{ background: colorForEvent(ev, today) }}
-                        aria-hidden="true"
-                      />
-                    ))}
-                    {rangeList.length > MAX_RANGE_BARS && (
-                      <span className="range-more">+{rangeList.length - MAX_RANGE_BARS}</span>
-                    )}
+                    {rangeList.slice(0, 3).map((ev) => {
+                      const isStart = ev.startDate === cell.iso;
+                      const isEnd = ev.dueDate === cell.iso;
+                      const barClass = ['range-bar', isStart ? 'bar-start' : '', isEnd ? 'bar-end' : '']
+                        .filter(Boolean)
+                        .join(' ');
+                      return (
+                        <span
+                          key={ev.id}
+                          className={barClass}
+                          style={{ background: colors.get(ev.id) ?? GRAY }}
+                          aria-hidden="true"
+                        />
+                      );
+                    })}
+                    {rangeList.length > 3 && <span className="range-more">+{rangeList.length - 3}</span>}
                   </span>
                 )}
                 {dayList.length > 0 && (
@@ -146,7 +186,8 @@ export function CalendarView({
                     {dayList.slice(0, 3).map((ev) => (
                       <span
                         key={ev.id}
-                        className={`marker ${ev.completed ? 'done' : ev.important ? 'important' : 'active'}`}
+                        className="marker"
+                        style={{ background: colors.get(ev.id) ?? GRAY }}
                         aria-hidden="true"
                       />
                     ))}
