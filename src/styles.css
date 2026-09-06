@@ -1088,3 +1088,33 @@ button {
 .sheet-footer .btn:disabled {
   opacity: 0.5;
 }
+/* ===== 多日事件 ===== */
+.countdown-text.c-active {
+  color: #0b8f52;
+}
+
+.calendar-cell.range {
+  border-radius: 0;
+}
+
+.calendar-cell.range.range-start {
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+}
+
+.calendar-cell.range.range-end {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+.calendar-cell.range-active {
+  background: #dbe8ff;
+}
+
+.calendar-cell.range-overdue {
+  background: #ffe0e0;
+}
+
+.calendar-cell.range-done {
+  background: #e6eaf0;
+}

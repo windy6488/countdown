@@ -8,6 +8,7 @@ function makeEvent(overrides: Partial<EventItem> = {}): EventItem {
     name: '生日',
     details: '',
     dueDate: '2026-10-01',
+    startDate: null,
     categoryId: null,
     completed: false,
     completedAt: null,
@@ -41,11 +42,13 @@ describe('backup 备份文件', () => {
   it('parseBackup 兼容旧 version 1 文件（无分类字段）', () => {
     const legacyEvent = makeEvent() as unknown as Record<string, unknown>;
     delete legacyEvent.categoryId;
+    delete legacyEvent.startDate;
     const text = JSON.stringify({ version: 1, exportedAt: '2026-01-01T00:00:00.000Z', events: [legacyEvent] });
     const parsed = parseBackup(text);
     expect(parsed.version).toBe(1);
     expect(parsed.categories).toEqual([]);
     expect(parsed.events[0].categoryId).toBeNull();
+    expect(parsed.events[0].startDate).toBeNull();
   });
 
   it('parseBackup 拒绝非 JSON / 错误版本 / 非法数据', () => {

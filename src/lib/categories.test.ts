@@ -8,6 +8,7 @@ function makeEvent(overrides: Partial<EventItem> = {}): EventItem {
     name: '测试',
     details: '',
     dueDate: '2026-09-10',
+    startDate: null,
     categoryId: 'c1',
     completed: false,
     completedAt: null,

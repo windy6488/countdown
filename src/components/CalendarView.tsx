@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Category, EventItem } from '../types';
 import { formatISODate, monthGrid, parseISODate, WEEKDAY_LABELS } from '../lib/date';
-import { eventsOnDay, sortEvents } from '../lib/events';
+import { eventsCoveringDay, sortEvents } from '../lib/events';
 import { EventRow } from './EventRow';
 
 interface CalendarViewProps {
@@ -31,20 +31,39 @@ export function CalendarView({
 
   const cells = useMemo(() => monthGrid(view.year, view.month, today), [view, today]);
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories]);
+  const singleDayEvents = useMemo(() => events.filter((ev) => !ev.startDate), [events]);
   const byDay = useMemo(() => {
     const map = new Map<string, EventItem[]>();
-    for (const ev of events) {
+    for (const ev of singleDayEvents) {
       const list = map.get(ev.dueDate);
       if (list) list.push(ev);
       else map.set(ev.dueDate, [ev]);
     }
     return map;
-  }, [events]);
-  const dayEvents = useMemo(() => sortEvents(eventsOnDay(events, selectedISO)), [events, selectedISO]);
+  }, [singleDayEvents]);
+  const dayEvents = useMemo(
+    () => sortEvents(eventsCoveringDay(events, selectedISO)),
+    [events, selectedISO]
+  );
 
   useEffect(() => {
     onSelectedDateChange(selectedISO);
   }, [selectedISO, onSelectedDateChange]);
+
+  const coversRange = (iso?: string) => {
+    if (!iso) return false;
+    return events.some((ev) => ev.startDate !== null && ev.startDate <= iso && iso <= ev.dueDate);
+  };
+  const rangeKindAt = (iso: string): 'active' | 'overdue' | 'done' | null => {
+    const covering = events.filter(
+      (ev) => ev.startDate !== null && ev.startDate <= iso && iso <= ev.dueDate
+    );
+    if (covering.length === 0) return null;
+    const incomplete = covering.filter((ev) => !ev.completed);
+    if (incomplete.length === 0) return 'done';
+    if (incomplete.some((ev) => ev.dueDate < today)) return 'overdue';
+    return 'active';
+  };
 
   const goMonth = (delta: number) => {
     setView((v) => {
@@ -85,9 +104,17 @@ export function CalendarView({
         </div>
 
         <div className="calendar-grid">
-          {cells.map((cell) => {
+          {cells.map((cell, index) => {
             const dayList = byDay.get(cell.iso) ?? [];
             const isSelected = cell.iso === selectedISO;
+            const kind = rangeKindAt(cell.iso);
+            const prevIso = cells[index - 1]?.iso;
+            const nextIso = cells[index + 1]?.iso;
+            const isRangeStart = kind !== null && !coversRange(prevIso);
+            const isRangeEnd = kind !== null && !coversRange(nextIso);
+            const rangeClass = kind
+              ? ` range range-${kind}${isRangeStart ? ' range-start' : ''}${isRangeEnd ? ' range-end' : ''}`
+              : '';
             const classes = [
               'calendar-cell',
               cell.inMonth ? '' : 'muted',
@@ -95,7 +122,7 @@ export function CalendarView({
               isSelected ? 'selected' : ''
             ]
               .filter(Boolean)
-              .join(' ');
+              .join(' ') + rangeClass;
             return (
               <button
                 key={cell.iso}
@@ -127,7 +154,7 @@ export function CalendarView({
         </div>
         {dayEvents.length === 0 ? (
           <div className="agenda-empty">
-            <p>这一天还没有事件</p>
+            <p>这一天没有事件</p>
             <button type="button" className="add-day-btn" onClick={() => onAddForDate(selectedISO)}>
               ＋ 给这一天添加事件
             </button>

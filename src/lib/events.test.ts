@@ -16,6 +16,7 @@ function makeEvent(overrides: Partial<EventItem> = {}): EventItem {
     name: '测试事件',
     details: '详情',
     dueDate: '2026-09-10',
+    startDate: null,
     categoryId: null,
     completed: false,
     completedAt: null,
@@ -30,9 +31,11 @@ describe('events 纯函数', () => {
     expect(isValidEventItem(makeEvent())).toBe(true);
     const legacy = makeEvent();
     delete (legacy as Partial<EventItem>).categoryId;
+    delete (legacy as Partial<EventItem>).startDate;
     expect(isValidEventItem(legacy)).toBe(true);
     const parsed = parseEvent(legacy);
     expect(parsed?.categoryId).toBeNull();
+    expect(parsed?.startDate).toBeNull();
     expect(isValidEventItem({ ...makeEvent(), categoryId: 123 })).toBe(false);
     expect(isValidEventItem(makeEvent({ dueDate: '2026-02-29' }))).toBe(false);
     expect(isValidEventItem(null)).toBe(false);
@@ -45,14 +48,17 @@ describe('events 纯函数', () => {
     expect(ev.completed).toBe(false);
     expect(ev.completedAt).toBeNull();
     expect(ev.categoryId).toBeNull();
+    expect(ev.startDate).toBeNull();
     expect(ev.id.length).toBeGreaterThan(0);
     const categorized = createEvent({
       name: '报告',
       details: '',
       dueDate: '2026-10-02',
+      startDate: '2026-10-01',
       categoryId: 'cat-1'
     });
     expect(categorized.categoryId).toBe('cat-1');
+    expect(categorized.startDate).toBe('2026-10-01');
   });
 
   it('applyPatch 完成/取消完成时正确迁移 completedAt', () => {
@@ -71,6 +77,10 @@ describe('events 纯函数', () => {
     expect(assigned[0].categoryId).toBe('work');
     const cleared = applyPatch(assigned, 'e1', { categoryId: null });
     expect(cleared[0].categoryId).toBeNull();
+    const ranged = applyPatch(cleared, 'e1', { startDate: '2026-09-01' });
+    expect(ranged[0].startDate).toBe('2026-09-01');
+    const single = applyPatch(ranged, 'e1', { startDate: null });
+    expect(single[0].startDate).toBeNull();
   });
 
   it('applyPatch 保留已完成事件原有的完成时间', () => {

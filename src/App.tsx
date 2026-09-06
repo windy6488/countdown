@@ -204,6 +204,7 @@ export default function App() {
       name: value.name,
       details: value.details,
       dueDate: value.dueDate,
+      startDate: value.startDate === '' ? null : value.startDate,
       categoryId: value.categoryId
     };
     if (source.kind === 'create') {

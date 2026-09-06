@@ -9,6 +9,7 @@ export type EventFormState =
 export interface EventFormValue {
   name: string;
   details: string;
+  startDate: string; // '' 表示未设置开始日期
   dueDate: string;
   categoryId: string | null;
   completed: boolean;
@@ -31,6 +32,7 @@ export function EventFormSheet({
 }: EventFormSheetProps) {
   const [name, setName] = useState('');
   const [details, setDetails] = useState('');
+  const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
@@ -41,12 +43,14 @@ export function EventFormSheet({
     if (form.kind === 'edit') {
       setName(form.event.name);
       setDetails(form.event.details);
+      setStartDate(form.event.startDate ?? '');
       setDueDate(form.event.dueDate);
       setCategoryId(form.event.categoryId);
       setCompleted(form.event.completed);
     } else {
       setName('');
       setDetails('');
+      setStartDate('');
       setDueDate(form.defaultDueDate ?? '');
       setCategoryId(null);
       setCompleted(false);
@@ -67,9 +71,20 @@ export function EventFormSheet({
       setError('请选择有效的截止日期');
       return;
     }
+    if (startDate !== '') {
+      if (!isValidISODate(startDate)) {
+        setError('请选择有效的开始日期');
+        return;
+      }
+      if (startDate > dueDate) {
+        setError('开始日期不能晚于截止日期');
+        return;
+      }
+    }
     onSubmit(form, {
       name: trimmed,
       details: details.trim(),
+      startDate,
       dueDate,
       categoryId,
       completed
@@ -105,6 +120,10 @@ export function EventFormSheet({
               maxLength={2000}
               rows={3}
             />
+          </label>
+          <label className="field">
+            <span>开始日期（可选，多日事件填）</span>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </label>
           <label className="field">
             <span>截止日期 *</span>

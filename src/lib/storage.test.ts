@@ -25,6 +25,7 @@ const ev: EventItem = {
   name: '测试',
   details: '',
   dueDate: '2026-09-09',
+  startDate: null,
   categoryId: null,
   completed: false,
   completedAt: null,
@@ -56,12 +57,14 @@ describe('storage 事件读写与损坏回退', () => {
   it('含非法条目时只保留合法条目并标记 ok=false', () => {
     const legacy = { ...ev };
     delete (legacy as Partial<EventItem>).categoryId;
+    delete (legacy as Partial<EventItem>).startDate;
     const storage = memoryStorage({
       [EVENTS_STORAGE_KEY]: JSON.stringify([legacy, { id: 'bad', name: '' }])
     });
     const res = readEvents(storage);
     expect(res.events).toHaveLength(1);
     expect(res.events[0].categoryId).toBeNull();
+    expect(res.events[0].startDate).toBeNull();
     expect(res.ok).toBe(false);
   });
 

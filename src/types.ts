@@ -2,7 +2,8 @@ export interface EventItem {
   id: string;
   name: string;
   details: string;
-  dueDate: string; // YYYY-MM-DD（本地日期）
+  dueDate: string; // YYYY-MM-DD：截止/结束日期
+  startDate: string | null; // YYYY-MM-DD：可选开始日期，null = 单日事件
   categoryId: string | null; // null 表示未分类
   completed: boolean;
   completedAt: string | null; // ISO 字符串
