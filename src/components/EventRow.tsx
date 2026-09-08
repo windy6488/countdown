@@ -7,6 +7,9 @@ interface EventRowProps {
   event: EventItem;
   today: string;
   categoryName?: string;
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?(id: string): void;
   onToggle(id: string): void;
   onEdit(event: EventItem): void;
   onDelete(event: EventItem): void;
@@ -16,6 +19,9 @@ export function EventRow({
   event,
   today,
   categoryName,
+  selectMode = false,
+  selected = false,
+  onToggleSelect,
   onToggle,
   onEdit,
   onDelete
@@ -45,7 +51,15 @@ export function EventRow({
     e.stopPropagation();
     onToggle(event.id);
   };
+  const handleSelectToggle = (e: ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    onToggleSelect?.(event.id);
+  };
   const handleCardClick = () => {
+    if (selectMode) {
+      onToggleSelect?.(event.id);
+      return;
+    }
     if (event.completed) {
       setExpanded((v) => !v);
     } else {
@@ -71,7 +85,8 @@ export function EventRow({
     'event-card',
     `state-${stateClass}`,
     event.completed ? 'is-completed' : '',
-    !event.completed && event.important ? 'is-important' : ''
+    !event.completed && event.important ? 'is-important' : '',
+    selectMode && selected ? 'is-selected' : ''
   ]
     .filter(Boolean)
     .join(' ');
@@ -79,10 +94,22 @@ export function EventRow({
   return (
     <div className={cardClass}>
       <div className="event-card-main" onClick={handleCardClick}>
-        <label className="check" onClick={stop}>
-          <input type="checkbox" checked={event.completed} onChange={handleToggle} />
-          <span className="checkmark" aria-hidden="true" />
-        </label>
+        {selectMode ? (
+          <label className="check" onClick={stop}>
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={handleSelectToggle}
+              aria-label="选择事件"
+            />
+            <span className="checkmark" aria-hidden="true" />
+          </label>
+        ) : (
+          <label className="check" onClick={stop}>
+            <input type="checkbox" checked={event.completed} onChange={handleToggle} />
+            <span className="checkmark" aria-hidden="true" />
+          </label>
+        )}
         <div className="event-text">
           <div className="event-name">{event.name}</div>
           <div className="event-meta">
@@ -90,15 +117,17 @@ export function EventRow({
             {categoryName ? ` · ${categoryName}` : ''}
           </div>
         </div>
-        {event.completed ? (
+        {event.completed && !selectMode ? (
           <span className="badge badge-done">已完成</span>
-        ) : (
+        ) : !selectMode ? (
           <span className={`countdown-text c-${countClass}`}>{renderCountdown()}</span>
+        ) : null}
+        {event.completed && !selectMode && (
+          <span className={`chevron${expanded ? ' open' : ''}`} aria-hidden="true" />
         )}
-        {event.completed && <span className={`chevron${expanded ? ' open' : ''}`} aria-hidden="true" />}
       </div>
 
-      {event.completed && expanded && (
+      {!selectMode && event.completed && expanded && (
         <div className="event-detail" onClick={stop}>
           <p className="event-details">{event.details ? event.details : '（无内容）'}</p>
           <div className="detail-meta">

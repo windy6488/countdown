@@ -9,10 +9,17 @@ interface EventListProps {
   today: string;
   filter: CategoryFilter;
   completedMode: CompletedMode;
+  selectMode: boolean;
+  selectedIds: Set<string>;
   onFilterChange(filter: CategoryFilter): void;
   onCompletedModeChange(mode: CompletedMode): void;
   onManageCategories(): void;
   onBatchImport(): void;
+  onEnterSelectMode(): void;
+  onExitSelectMode(): void;
+  onToggleSelect(id: string): void;
+  onSetSelected(ids: string[]): void;
+  onRequestDeleteSelected(ids: string[]): void;
   onEdit(event: EventItem): void;
   onToggle(id: string): void;
   onDelete(event: EventItem): void;
@@ -24,10 +31,17 @@ export function EventList({
   today,
   filter,
   completedMode,
+  selectMode,
+  selectedIds,
   onFilterChange,
   onCompletedModeChange,
   onManageCategories,
   onBatchImport,
+  onEnterSelectMode,
+  onExitSelectMode,
+  onToggleSelect,
+  onSetSelected,
+  onRequestDeleteSelected,
   onEdit,
   onToggle,
   onDelete
@@ -44,6 +58,15 @@ export function EventList({
     return sortEvents(list);
   }, [events, completedMode, filter]);
   const hasUncategorized = useMemo(() => events.some((ev) => ev.categoryId === null), [events]);
+
+  const handleSelectAll = () => {
+    const visibleIds = visible.map((ev) => ev.id);
+    if (visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id))) {
+      onSetSelected(visibleIds.filter((id) => !selectedIds.has(id)));
+    } else {
+      onSetSelected([...new Set([...selectedIds, ...visibleIds])]);
+    }
+  };
 
   return (
     <>
@@ -81,26 +104,57 @@ export function EventList({
           <button type="button" className="chip-btn chip-manage" onClick={onBatchImport}>
             批量导入
           </button>
+          {!selectMode && (
+            <button type="button" className="chip-btn chip-manage chip-danger" onClick={onEnterSelectMode}>
+              批量删除
+            </button>
+          )}
         </div>
-        <div className="view-options">
-          <span className="view-label">已完成事件</span>
-          <div className="segmented">
-            <button
-              type="button"
-              className={completedMode === 'collapse' ? 'active' : ''}
-              onClick={() => onCompletedModeChange('collapse')}
-            >
-              折叠
-            </button>
-            <button
-              type="button"
-              className={completedMode === 'hidden' ? 'active' : ''}
-              onClick={() => onCompletedModeChange('hidden')}
-            >
-              不显示
-            </button>
+        {!selectMode ? (
+          <div className="view-options">
+            <span className="view-label">已完成事件</span>
+            <div className="segmented">
+              <button
+                type="button"
+                className={completedMode === 'collapse' ? 'active' : ''}
+                onClick={() => onCompletedModeChange('collapse')}
+              >
+                折叠
+              </button>
+              <button
+                type="button"
+                className={completedMode === 'hidden' ? 'active' : ''}
+                onClick={() => onCompletedModeChange('hidden')}
+              >
+                不显示
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="selection-bar">
+            <span className="selection-count">
+              已选 {selectedIds.size} / {visible.length}
+            </span>
+            <div className="selection-actions">
+              <button type="button" className="sel-btn" onClick={handleSelectAll}>
+                {visible.length > 0 && visible.every((ev) => selectedIds.has(ev.id))
+                  ? '取消全选'
+                  : '全选'}
+              </button>
+              <button
+                type="button"
+                className="sel-btn sel-danger"
+                disabled={selectedIds.size === 0}
+                onClick={() => onRequestDeleteSelected([...selectedIds])}
+              >
+                删除
+              </button>
+              <button type="button" className="sel-btn" onClick={onExitSelectMode}>
+                退出
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {events.length === 0 ? (
@@ -121,6 +175,9 @@ export function EventList({
               event={ev}
               today={today}
               categoryName={ev.categoryId ? categoryMap.get(ev.categoryId) : undefined}
+              selectMode={selectMode}
+              selected={selectedIds.has(ev.id)}
+              onToggleSelect={onToggleSelect}
               onToggle={onToggle}
               onEdit={onEdit}
               onDelete={onDelete}

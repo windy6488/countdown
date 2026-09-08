@@ -85,6 +85,7 @@ export default function App() {
     updateEvent,
     toggleCompleted,
     removeById,
+    removeMany,
     addCategory,
     removeCategory,
     setCompletedMode,
@@ -97,6 +98,8 @@ export default function App() {
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
   const [batchImportOpen, setBatchImportOpen] = useState(false);
   const [filter, setFilter] = useState<CategoryFilter>({ kind: 'all' });
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [calendarDate, setCalendarDate] = useState(today);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -150,6 +153,13 @@ export default function App() {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (tab !== 'list' && selectMode) {
+      setSelectMode(false);
+      setSelectedIds(new Set());
+    }
+  }, [tab, selectMode]);
+
   const handleExport = () => {
     downloadBackup(events, categories);
     showToast('已导出备份文件');
@@ -173,7 +183,35 @@ export default function App() {
     }
   };
 
-  const requestDelete = (event: EventItem) => {
+
+  const enterSelectMode = () => {
+    setSelectMode(true);
+    setSelectedIds(new Set());
+  };
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const requestDeleteSelected = (ids: string[]) => {
+    if (ids.length === 0) return;
+    setConfirm({
+      title: '删除事件',
+      message: `确定删除选中的 ${ids.length} 个事件吗？删除后无法恢复。`,
+      onConfirm: () => {
+        removeMany(ids);
+        setConfirm(null);
+        exitSelectMode();
+      }
+    });
+  };  const requestDelete = (event: EventItem) => {
     setConfirm({
       title: '删除事件',
       message: `确定删除「${event.name}」吗？删除后无法恢复。`,
@@ -253,6 +291,13 @@ export default function App() {
             onCompletedModeChange={setCompletedMode}
             onManageCategories={() => setCategorySheetOpen(true)}
             onBatchImport={() => setBatchImportOpen(true)}
+            selectMode={selectMode}
+            selectedIds={selectedIds}
+            onEnterSelectMode={enterSelectMode}
+            onExitSelectMode={exitSelectMode}
+            onToggleSelect={toggleSelect}
+            onSetSelected={(ids) => setSelectedIds(new Set(ids))}
+            onRequestDeleteSelected={requestDeleteSelected}
             onEdit={(ev) => setForm({ kind: 'edit', event: ev })}
             onToggle={toggleCompleted}
             onDelete={requestDelete}

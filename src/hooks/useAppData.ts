@@ -117,6 +117,15 @@ export function useAppData() {
     [events, commitEvents]
   );
 
+  const removeMany = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return;
+      const idSet = new Set(ids);
+      const next = events.filter((ev) => !idSet.has(ev.id));
+      commitEvents(next, `已删除 ${events.length - next.length} 个事件`);
+    },
+    [events, commitEvents]
+  );
   const addCategory = useCallback(
     (rawName: string) => {
       const result = createCategoryName(categories, rawName);
@@ -183,6 +192,7 @@ export function useAppData() {
     updateEvent,
     toggleCompleted,
     removeById,
+    removeMany,
     addCategory,
     removeCategory,
     setCompletedMode,
